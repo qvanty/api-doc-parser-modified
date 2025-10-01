@@ -48,7 +48,7 @@
     "knip:fix": "knip --fix",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "prepare": "pnpm run build",
+    "prepare": "npm run build",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
     "test:watch": "vitest --watch",
