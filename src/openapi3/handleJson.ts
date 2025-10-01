@@ -15,6 +15,7 @@ import type {
   OperationObjectDereferenced,
   SchemaObjectDereferenced,
 } from "./dereferencedOpenApiv3.js";
+//import { b } from "vitest/dist/chunks/suite.d.FvehnV49.js";
 
 /**
  * Assigns relationships between resources based on their fields.
@@ -163,25 +164,37 @@ export default async function handleJson(
   const paths = getResourcePaths(document.paths);
 
   const serverUrlOrRelative = document.servers?.[0]?.url || "/";
-  const serverUrl = new URL(serverUrlOrRelative, entrypointUrl).href;
+  //const serverUrl = new URL(serverUrlOrRelative, entrypointUrl).href;
+
+  const entryUrl = new URL(entrypointUrl);
+  entryUrl.pathname = entryUrl.pathname.replace(/docs\.json$/, "");
+  const serverUrl = entryUrl.href;
+
 
   const resources: Resource[] = [];
 
   for (const path of paths) {
     const splittedPath = removeTrailingSlash(path).split("/");
-    const baseName = splittedPath[splittedPath.length - 2];
+    var baseName;
+    if(splittedPath[splittedPath.length-1] == "{id}"){
+      baseName = splittedPath[splittedPath.length - 2]
+    } else {
+      baseName = splittedPath[splittedPath.length - 1];
+    }
+    
     if (!baseName) {
       throw new Error("Invalid path: " + path);
     }
 
     const name = pluralize(baseName);
-    const url = `${removeTrailingSlash(serverUrl)}/${name}`;
+    const url = `${removeTrailingSlash(serverUrl)}/${baseName}`;
     const pathItem = document.paths[path];
     if (!pathItem) {
       throw new Error();
     }
 
-    const title = classify(baseName);
+    //const title = classify(baseName);
+    const title = baseName;
 
     const {
       get: showOperation,
@@ -219,7 +232,9 @@ export default async function handleJson(
       resource = mergeResources(showResource, editResource);
     }
 
-    const pathCollection = document.paths[`/${name}`];
+    //const pathCollection = document.paths[`/${name}`];
+    const pathCollection = Object.entries(document.paths)
+    .find(([path]) => path.endsWith(`/${name}`))?.[1];
     const { get: listOperation, post: createOperation } = pathCollection ?? {};
 
     resource.operations = [

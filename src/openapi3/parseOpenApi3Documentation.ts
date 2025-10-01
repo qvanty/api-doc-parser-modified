@@ -11,10 +11,22 @@ export interface ParsedOpenApi3Documentation {
   status: number;
 }
 
+function replaceVersionInPathKeys(spec: any, replacement = "v1") {
+  if (!spec?.paths || typeof spec.paths !== "object") return spec;
+
+  const out = { ...spec, paths: {} as Record<string, any> };
+  for (const [pathKey, value] of Object.entries(spec.paths)) {
+    const newKey = pathKey.replace(/\{version\}/g, replacement);
+    out.paths[newKey] = value;
+  }
+  return out;
+}
+
 export default function parseOpenApi3Documentation(
   entrypointUrl: string,
   options: RequestInitExtended = {},
 ): Promise<ParsedOpenApi3Documentation> {
+  console.log("modified version\n");
   entrypointUrl = removeTrailingSlash(entrypointUrl);
   const headersObject =
     typeof options.headers === "function" ? options.headers() : options.headers;
@@ -27,8 +39,10 @@ export default function parseOpenApi3Documentation(
     .then((res) => Promise.all([res, res.json()]))
     .then(
       ([res, response]: [res: Response, response: OpenAPIV3.Document]) => {
+        console.log("gonna modify");
+        const modified = replaceVersionInPathKeys(response);
         const title = response.info.title;
-        return handleJson(response, entrypointUrl).then((resources) => ({
+        return handleJson(modified, entrypointUrl).then((resources) => ({
           api: new Api(entrypointUrl, { title, resources }),
           response,
           status: res.status,

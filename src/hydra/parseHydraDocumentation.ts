@@ -1,4 +1,5 @@
-import { expand as jsonldExpand } from "jsonld";
+import pkg from 'jsonld';
+const { expand: jsonldExpand } = pkg;
 import type { OperationType, Parameter } from "../core/index.js";
 import { Api, Field, Operation, Resource } from "../core/index.js";
 import type { RequestInitExtended } from "../core/types.js";
