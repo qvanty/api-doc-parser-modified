@@ -39,6 +39,7 @@ async function fetchOpenApi(url: string): Promise<OpenAPIV2.Document> {
 export default function parseSwaggerDocumentation(
   entrypointUrl: string,
 ): Promise<ParsedSwaggerDocumentation> {
+  console.log("modification\n")
   entrypointUrl = removeTrailingSlash(entrypointUrl);
   const parseOpenApiText = (text: string): OpenAPIV2.Document => {
     const s = text.trim();
