@@ -239,8 +239,15 @@ export default async function handleJson(
     //const pathCollection = document.paths[`/${name}`];
     const pathCollection = Object.entries(document.paths)
     .find(([path]) => path.endsWith(`/${name}`))?.[1];
-    const { get: listOperation, post: createOperation } = pathCollection ?? {};
 
+    
+    const { get: listOperation, post: createOperation } = pathCollection ?? {};
+    if (name == "students"){
+      console.log("Collection path:", pathCollection);
+      console.log("List operation:", listOperation);
+      console.log("List params:", listOperation?.parameters);
+    }
+    
     resource.operations = [
       ...(showOperation
         ? [buildOperationFromPathItem("get", "show", showOperation)]
@@ -263,6 +270,7 @@ export default async function handleJson(
     ];
 
     if (listOperation?.parameters) {
+      console.log("inside parameter thingy");
       resource.parameters = listOperation.parameters.map(
         (parameter) =>
           new Parameter(

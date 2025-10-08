@@ -10,8 +10,6 @@ function filterPaths(paths: OpenAPIV2.PathsObject | OpenAPIV3.PathsObject){
       
       tempPath.replace(/\/{[^}]+}\/?$/, "");
     }
-    console.log(p);
-    console.log(tempPath);
 
     let exists = false;
     for (const key in pathMap.keys()){
@@ -33,9 +31,6 @@ function filterPaths(paths: OpenAPIV2.PathsObject | OpenAPIV3.PathsObject){
   //if it is skip
   //if it's not, put without {id} in map, put with {id} in final list
   //return final list
-  for (const asd in finalPaths){
-    console.log(asd);
-  }
 
   return finalPaths;
 
