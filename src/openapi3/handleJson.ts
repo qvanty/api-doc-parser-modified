@@ -242,11 +242,11 @@ export default async function handleJson(
 
     
     const { get: listOperation, post: createOperation } = pathCollection ?? {};
-    if (name == "students"){
-      console.log("Collection path:", pathCollection);
-      console.log("List operation:", listOperation);
-      console.log("List params:", listOperation?.parameters);
-    }
+    //if (name == "students"){
+    //  console.log("Collection path:", pathCollection);
+    //  console.log("List operation:", listOperation);
+    //  console.log("List params:", listOperation?.parameters);
+    //}
     
     resource.operations = [
       ...(showOperation
