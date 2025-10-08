@@ -6,12 +6,18 @@ export function getResourcePaths(
   const nonMatching = Object.keys(paths).filter((path) => !RegExp("^[^{}]+/{[^{}]+}/?$").test(path));
   console.log("Non-matching paths:");
   for (const p of nonMatching) {
-    console.log("  ", p);}
+    console.log("  ", p);
+  }
+
+  const matching = Object.keys(paths).filter((path) => RegExp("^[^{}]+/{[^{}]+}/?$").test(path));
+  console.log("Matching paths:");
+  for (const p of matching) {
+    console.log("  ", p);
+  }    
   return [
     ...new Set(
-      //Object.keys(paths)
-      Object.keys(paths).filter((path) => new RegExp("^[^{}]+/{[^{}]+}/?$").test(path), 
-      ),
+      Object.keys(paths)
+      //Object.keys(paths).filter((path) => new RegExp("^[^{}]+/{[^{}]+}/?$").test(path)),
     ),
   ];
 }

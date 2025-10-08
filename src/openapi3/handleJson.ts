@@ -171,7 +171,9 @@ export default async function handleJson(
   const serverUrl = entryUrl.href;
 
 
-  const resources: Resource[] = [];
+  //const resources: Resource[] = [];
+  let resources = new Map<string, Resource>();
+
 
   for (const path of paths) {
     const splittedPath = removeTrailingSlash(path).split("/");
@@ -270,9 +272,18 @@ export default async function handleJson(
           ),
       );
     }
-
-    resources.push(resource);
+    let exists = false;
+    for (const key in resources.keys()){
+      if (resource.title == key){
+        exists = true;
+      }
+    }
+    if (!exists){
+      resources.set(resource.title ?? "no title", resource);
+    }
+    
   }
+  const resourceList : Resource[] = Array.from(resources.values());
 
-  return assignResourceRelationships(resources);
+  return assignResourceRelationships(resourceList);
 }
