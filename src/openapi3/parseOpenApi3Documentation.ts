@@ -26,7 +26,7 @@ export default function parseOpenApi3Documentation(
   entrypointUrl: string,
   options: RequestInitExtended = {},
 ): Promise<ParsedOpenApi3Documentation> {
-  console.log("modified version\n");
+  console.log("modified version v3\n");
   entrypointUrl = removeTrailingSlash(entrypointUrl);
   const headersObject =
     typeof options.headers === "function" ? options.headers() : options.headers;
@@ -39,7 +39,6 @@ export default function parseOpenApi3Documentation(
     .then((res) => Promise.all([res, res.json()]))
     .then(
       ([res, response]: [res: Response, response: OpenAPIV3.Document]) => {
-        console.log("gonna modify");
         const modified = replaceVersionInPathKeys(response);
         const title = response.info.title;
         return handleJson(modified, entrypointUrl).then((resources) => ({
