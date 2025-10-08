@@ -149,6 +149,8 @@ function dereferenceOpenAPIV3(
   `/noun/{id}` path. `getResources` strips out the former, allowing us to focus
   on the latter.
 
+  Edit: I include all paths since our API has non {id} paths that have to be processed as well.
+
   In OpenAPI 3, the `/noun/{id}` path will typically have a `get` action, that
   probably accepts parameters and would respond with an object.
 */
@@ -272,6 +274,7 @@ export default async function handleJson(
           ),
       );
     }
+    
     let exists = false;
     for (const key in resources.keys()){
       if (resource.title == key){
