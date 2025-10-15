@@ -13,16 +13,27 @@ export default function handleJson(
   entrypointUrl: string,
 ): Resource[] {
   const paths = getResourcePaths(response.paths);
+  const entryUrl = new URL(entrypointUrl);
+  entryUrl.pathname = entryUrl.pathname.replace(/\/sensoterra-api\.yaml\.php$/, "");
+  const serverUrl = entryUrl.href;
+  console.log(serverUrl);
 
   return paths.map((path) => {
     const splittedPath = removeTrailingSlash(path).split("/");
-    const baseName = splittedPath[splittedPath.length - 2];
+    var baseName;
+    if(splittedPath[splittedPath.length-1] == "{id}"){
+      baseName = splittedPath[splittedPath.length - 2]
+    } else {
+      baseName = splittedPath[splittedPath.length - 1];
+    }
+    console.log("working on: ", baseName);
+
     if (!baseName) {
       throw new Error("Invalid path: " + path);
     }
 
     const name = pluralize(baseName);
-    const url = `${removeTrailingSlash(entrypointUrl)}/${name}`;
+    const url = `${removeTrailingSlash(serverUrl)}/${name}`;
 
     const title = classify(baseName);
 
@@ -45,6 +56,7 @@ export default function handleJson(
     const requiredFields = response.definitions?.[title]?.required ?? [];
 
     const fields = Object.entries(properties).map(
+      
       ([fieldName, property]) =>
         new Field(fieldName, {
           id: null,
@@ -60,8 +72,7 @@ export default function handleJson(
           description: property.description || "",
         }),
     );
-
-    return new Resource(name, url, {
+    const newResource = new Resource(name, url, {
       id: null,
       title,
       description,
@@ -69,5 +80,11 @@ export default function handleJson(
       readableFields: fields,
       writableFields: fields,
     });
+
+    if(newResource.title == "/token"){
+      console.dir(newResource, { depth: null, colors: true })
+    }
+
+    return newResource
   });
 }

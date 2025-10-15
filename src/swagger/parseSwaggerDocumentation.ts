@@ -3,6 +3,14 @@ import type { OpenAPIV2 } from "openapi-types";
 import { Api } from "../core/Api.js";
 import { removeTrailingSlash } from "../core/utils/index.js";
 import handleJson from "./handleJson.js";
+import { JSON_SCHEMA, load} from "js-yaml";
+
+
+function isJson(text: string): boolean {
+  const first = text.trimStart()[0];
+  return first === "{" || first === "[";
+}
+
 
 export interface ParsedSwaggerDocumentation {
   api: Api;
@@ -15,15 +23,34 @@ export default function parseSwaggerDocumentation(
 ): Promise<ParsedSwaggerDocumentation> {
   entrypointUrl = removeTrailingSlash(entrypointUrl);
   return fetch(entrypointUrl)
-    .then((res) => Promise.all([res, res.json()]))
+    .then((res) => Promise.all([res, res.text()]))
     .then(
-      ([res, response]: [res: Response, response: OpenAPIV2.Document]) => {
-        const title = response.info.title;
-        const resources = handleJson(response, entrypointUrl);
+      ([res, response]: [res: Response, response: string]) => {
+        const isYaml = !isJson(response);
+        console.log(isYaml);
+        let parsedResponse;
+        const yamlOptions = {
+          schema: JSON_SCHEMA,
+          json: true
+        }
+        if (isYaml){
+          console.log("yaml route")
+          parsedResponse = load(response, yamlOptions);
+        } else {
+          console.log("json route")
+          parsedResponse = JSON.parse(response);
+        }
+        console.log(parsedResponse);
+        //console.dir(parsedResponse, { depth: null, colors: true });
+        
+        
+        const title = parsedResponse.info.title;
+        console.log("title: ", title);
+        const resources = handleJson(parsedResponse, entrypointUrl);
 
         return {
           api: new Api(entrypointUrl, { title, resources }),
-          response,
+          response: parsedResponse,
           status: res.status,
         };
       },
