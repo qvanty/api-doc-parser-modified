@@ -40,19 +40,25 @@ export default function parseSwaggerDocumentation(
           console.log("json route")
           parsedResponse = JSON.parse(response);
         }
-        console.log(parsedResponse);
         //console.dir(parsedResponse, { depth: null, colors: true });
+
+        console.log("version sensoterrra");
         
         
         const title = parsedResponse.info.title;
-        console.log("title: ", title);
-        const resources = handleJson(parsedResponse, entrypointUrl);
+        //const resources = handleJson(parsedResponse, entrypointUrl);
 
-        return {
-          api: new Api(entrypointUrl, { title, resources }),
+        return handleJson(parsedResponse, entrypointUrl).then((resources) => ({
+          api: new Api(entrypointUrl, {title, resources}),
           response: parsedResponse,
           status: res.status,
-        };
+        }))
+
+        // return {
+        //   api: new Api(entrypointUrl, { title, resources }),
+        //   response: parsedResponse,
+        //   status: res.status,
+        // };
       },
       ([res, response]: [res: Response, response: OpenAPIV2.Document]) => {
         // oxlint-disable-next-line no-throw-literal

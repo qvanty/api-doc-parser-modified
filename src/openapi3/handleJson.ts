@@ -194,7 +194,7 @@ export default async function handleJson(
     const url = `${removeTrailingSlash(serverUrl)}/${baseName}`;
     const pathItem = document.paths[path];
     if (!pathItem) {
-      throw new Error();
+      throw new Error(" " + path +" couldn't be accessed" );
     }
 
     //const title = classify(baseName);
