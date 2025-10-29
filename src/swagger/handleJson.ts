@@ -178,7 +178,7 @@ export default async function handleJson(
   for (const path of paths) {
     const splittedPath = removeTrailingSlash(path).split("/");
     var baseName;
-    if(splittedPath[splittedPath.length-1] == "{id}"){
+    if(splittedPath[splittedPath.length-1]?.includes("{")){
       baseName = splittedPath[splittedPath.length - 2]
     } else {
       baseName = splittedPath[splittedPath.length - 1];
@@ -189,9 +189,13 @@ export default async function handleJson(
       throw new Error("Invalid path: " + path);
     }
 
-    const name = pluralize(baseName);
-    const url = `${removeTrailingSlash(serverUrl)}/${name}`;
+    const name = baseName;
+    const url = `${removeTrailingSlash(serverUrl)}/${baseName}`;
     const pathItem = document.paths[path];
+    // if(path.includes("customer")){
+    //   console.log(pathItem);
+    // }
+    
     if (!pathItem) {
       throw new Error(" " + path +" couldn't be accessed" );
     }
@@ -203,21 +207,31 @@ export default async function handleJson(
       put: putOperation,
       patch: patchOperation,
       delete: deleteOperation,
+      post: postOperation,
     } = pathItem;
 
+
     const editOperation = putOperation || patchOperation;
-    if (!showOperation && !editOperation) {
+    if (!showOperation && !editOperation && !deleteOperation && !postOperation) {
+      console.log("first out");
       continue;
     }
     const showSchema =
       showOperation?.responses?.["200"]?.schema || document.definitions?.[title];
 
-    const bodyParam = editOperation?.parameters?.find(p => (p as any).in === "body") as BodyParameterObjectDereferenced | undefined;
-
-    const editSchema = bodyParam?.schema;
+    const editSchema = editOperation?.parameters?.find(p => (p as any).in === "body")?.schema;
+    //@ts-ignore
+    const deleteSchema = deleteOperation?.parameters?.find(p => (p as any).in === "body")?.schema ?? deleteOperation?.responses?.["200"]?.schema ??(deleteOperation?.responses?.["200"]?.type ? deleteOperation.responses["200"] : null);
+    const postSchema = postOperation?.parameters?.find(p => (p as any).in === "body")?.schema;
     
 
-    if (!showSchema && !editSchema) {
+    
+
+
+    
+
+    if (!showSchema && !editSchema && !deleteSchema && !postSchema) {
+      console.log("second out");
       continue;
     }
 
@@ -227,8 +241,32 @@ export default async function handleJson(
     const editResource = editSchema
       ? buildResourceFromSchema(editSchema, name, title, url)
       : null;
-    let resource = showResource ?? editResource;
+    const deleteResource = deleteSchema
+      ? buildResourceFromSchema(deleteSchema, name, title, url)
+      : null;
+    const postResource = postSchema
+      ? buildResourceFromSchema(postSchema, name, title, url)
+      : null;    
+    //let resource = showResource ?? editResource ?? deleteResource ?? postResource;
+  
+
+
+
+    const candidates = [showResource, editResource, deleteResource, postResource];
+
+    let resource: Resource | null = null;
+    for (const candidate of candidates) {
+      if (!candidate) {
+        continue;
+      }
+      if (resource) {
+        resource = mergeResources(resource, candidate);
+      } else {
+        resource = candidate;
+      }
+    }
     if (!resource) {
+      console.log("third out");
       continue;
     }
     if (showResource && editResource) {
@@ -236,8 +274,9 @@ export default async function handleJson(
     }
 
 
-    const pathCollection = Object.entries(document.paths).find(([path]) => path.endsWith(`/${name}`))?.[1];
-    const { get: listOperation, post: createOperation } = pathCollection ?? {};
+    //const pathCollection = Object.entries(document.paths).find(([path]) => path.endsWith(`/${name}`))?.[1];
+    const pathCollection = Object.entries(document.paths).find(([path]) => path.includes(`/$name`))?.[1];
+    const { get: listOperation, post: createOperation, delete: secondDeleteOperation } = pathCollection ?? {};
 
     resource.operations = [
       ...(showOperation
@@ -255,8 +294,11 @@ export default async function handleJson(
       ...(listOperation
         ? [buildOperationFromPathItem("get", "list", listOperation)]
         : []),
-      ...(createOperation
-        ? [buildOperationFromPathItem("post", "create", createOperation)]
+      ...(postOperation
+        ? [buildOperationFromPathItem("post", "create", postOperation)]
+        : []),
+      ...(secondDeleteOperation
+        ? [buildOperationFromPathItem("delete", "delete", secondDeleteOperation)]
         : []),
     ];
 
@@ -272,25 +314,28 @@ export default async function handleJson(
                 parameter["deprecated"],
               ),
           );
-        }
+    }
         
-        let exists = false;
-        for (const key in resources.keys()){
-          if (resource.title == key){
-            exists = true;
-          }
-        }
-        if (!exists){
-          resources.set(resource.title ?? "no title", resource);
-        }
-        
+    let exists = false;
+    const keys = Array.from(resources.keys());
+    for (const key of keys){
+      if (resource.title == key){
+        console.log("matching titles: ", resource.title, " - ", key);
+        exists = true;
       }
-    const resourceList : Resource[] = Array.from(resources.values());
+    }
+    if (!exists){
+      console.log("added resource title: ", resource.title)
+      resources.set(resource.title ?? "no title", resource);
+    }
+
+
+        
+  }
     
-    return assignResourceRelationships(resourceList);
-
-
-
+  const resourceList : Resource[] = Array.from(resources.values());
+    
+  return assignResourceRelationships(resourceList);
 }  
 
 

@@ -284,6 +284,7 @@ export default async function handleJson(
     }
     
     let exists = false;
+    // should change this to of, test the difference
     for (const key in resources.keys()){
       if (resource.title == key){
         exists = true;
