@@ -41,21 +41,6 @@ function filterPaths(paths: OpenAPIV2.PathsObject | OpenAPIV3.PathsObject){
 export function getResourcePaths(
   paths: OpenAPIV2.PathsObject | OpenAPIV3.PathsObject,
 ): string[] {
-  let counter = 0;
-  const nonMatching = Object.keys(paths).filter((path) => !RegExp("^[^{}]+/{[^{}]+}/?$").test(path));
-  console.log("Non-matching paths:");
-  for (const p of nonMatching) {
-    counter++;
-    console.log("  ", p);
-  }
-
-  const matching = Object.keys(paths).filter((path) => RegExp("^[^{}]+/{[^{}]+}/?$").test(path));
-  console.log("Matching paths:");
-  for (const p of matching) {
-    counter++;
-    console.log("  ", p);
-  }  
-  console.log("total number: ", counter);  
   return filterPaths(paths);
   //[
     //...new Set(

@@ -166,14 +166,11 @@ export default async function handleJson(
   const paths = getResourcePaths(document.paths);
 
   const serverUrlOrRelative = document.servers?.[0]?.url || "/";
-  //const serverUrl = new URL(serverUrlOrRelative, entrypointUrl).href;
 
   const entryUrl = new URL(entrypointUrl);
   entryUrl.pathname = entryUrl.pathname.replace(/docs\.json$/, "");
   const serverUrl = entryUrl.href;
 
-
-  //const resources: Resource[] = [];
   let resources = new Map<string, Resource>();
 
 
@@ -236,17 +233,11 @@ export default async function handleJson(
       resource = mergeResources(showResource, editResource);
     }
 
-    //const pathCollection = document.paths[`/${name}`];
     const pathCollection = Object.entries(document.paths)
     .find(([path]) => path.endsWith(`/${name}`))?.[1];
 
     
     const { get: listOperation, post: createOperation } = pathCollection ?? {};
-    //if (name == "students"){
-    //  console.log("Collection path:", pathCollection);
-    //  console.log("List operation:", listOperation);
-    //  console.log("List params:", listOperation?.parameters);
-    //}
     
     resource.operations = [
       ...(showOperation
@@ -284,15 +275,21 @@ export default async function handleJson(
     }
     
     let exists = false;
-    // should change this to of, test the difference
-    for (const key in resources.keys()){
+    let mergingKey;
+    for (const key of resources.keys()){
       if (resource.title == key){
         exists = true;
+        mergingKey = key;
       }
     }
     if (!exists){
       resources.set(resource.title ?? "no title", resource);
+    } else {
+      //the loop before this makes sure mergingKey is not undefined
+      //@ts-ignore
+      resources.set(resource.title ?? "no title", mergeResources(resource, resources.get(mergingKey)));
     }
+    
     
   }
   const resourceList : Resource[] = Array.from(resources.values());

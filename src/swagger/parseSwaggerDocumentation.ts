@@ -11,6 +11,19 @@ function isJson(text: string): boolean {
   return first === "{" || first === "[";
 }
 
+function parseResponse(response: string){
+  const isYaml = !isJson(response);
+  const yamlOptions = {
+    schema: JSON_SCHEMA,
+    json: true
+  }
+  if (isYaml){
+    return load(response, yamlOptions);
+  } else {
+    return JSON.parse(response);
+  }
+}
+
 
 export interface ParsedSwaggerDocumentation {
   api: Api;
@@ -26,39 +39,15 @@ export default function parseSwaggerDocumentation(
     .then((res) => Promise.all([res, res.text()]))
     .then(
       ([res, response]: [res: Response, response: string]) => {
-        const isYaml = !isJson(response);
-        console.log(isYaml);
-        let parsedResponse;
-        const yamlOptions = {
-          schema: JSON_SCHEMA,
-          json: true
-        }
-        if (isYaml){
-          console.log("yaml route")
-          parsedResponse = load(response, yamlOptions);
-        } else {
-          console.log("json route")
-          parsedResponse = JSON.parse(response);
-        }
-        //console.dir(parsedResponse, { depth: null, colors: true });
-
-        console.log("version sensoterrra");
-        
-        
+        const parsedResponse = parseResponse(response);
+      
         const title = parsedResponse.info.title;
-        //const resources = handleJson(parsedResponse, entrypointUrl);
 
         return handleJson(parsedResponse, entrypointUrl).then((resources) => ({
           api: new Api(entrypointUrl, {title, resources}),
           response: parsedResponse,
           status: res.status,
         }))
-
-        // return {
-        //   api: new Api(entrypointUrl, { title, resources }),
-        //   response: parsedResponse,
-        //   status: res.status,
-        // };
       },
       ([res, response]: [res: Response, response: OpenAPIV2.Document]) => {
         // oxlint-disable-next-line no-throw-literal

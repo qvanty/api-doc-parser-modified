@@ -171,7 +171,6 @@ export default async function handleJson(
   const entryUrl = new URL(entrypointUrl);
   entryUrl.pathname = entryUrl.pathname.replace(/\/sensoterra-api\.yaml\.php$/, "");
   const serverUrl = entryUrl.href;
-  console.log(serverUrl);
 
   let resources = new Map<string, Resource>();
   
@@ -183,7 +182,6 @@ export default async function handleJson(
     } else {
       baseName = splittedPath[splittedPath.length - 1];
     }
-    console.log("working on: ", baseName);
 
     if (!baseName) {
       throw new Error("Invalid path: " + path);
@@ -213,7 +211,6 @@ export default async function handleJson(
 
     const editOperation = putOperation || patchOperation;
     if (!showOperation && !editOperation && !deleteOperation && !postOperation) {
-      console.log("first out");
       continue;
     }
     const showSchema =
@@ -225,13 +222,7 @@ export default async function handleJson(
     const postSchema = postOperation?.parameters?.find(p => (p as any).in === "body")?.schema;
     
 
-    
-
-
-    
-
     if (!showSchema && !editSchema && !deleteSchema && !postSchema) {
-      console.log("second out");
       continue;
     }
 
@@ -266,7 +257,6 @@ export default async function handleJson(
       }
     }
     if (!resource) {
-      console.log("third out");
       continue;
     }
     if (showResource && editResource) {
@@ -303,7 +293,6 @@ export default async function handleJson(
     ];
 
     if (listOperation?.parameters) {
-          console.log("inside parameter thingy");
           resource.parameters = listOperation.parameters.map(
             (parameter) =>
               new Parameter(
@@ -317,18 +306,20 @@ export default async function handleJson(
     }
         
     let exists = false;
-    const keys = Array.from(resources.keys());
-    for (const key of keys){
+    let mergingKey;
+    for (const key of resources.keys()){
       if (resource.title == key){
-        console.log("matching titles: ", resource.title, " - ", key);
         exists = true;
+        mergingKey = key;
       }
     }
     if (!exists){
-      console.log("added resource title: ", resource.title)
       resources.set(resource.title ?? "no title", resource);
+    } else {
+      //the loop before this makes sure mergingKey is not undefined
+      //@ts-ignore
+      resources.set(resource.title ?? "no title", mergeResources(resource, resources.get(mergingKey)));
     }
-
 
         
   }
@@ -338,133 +329,3 @@ export default async function handleJson(
   return assignResourceRelationships(resourceList);
 }  
 
-
-
-  // return paths.map((path) => {
-  //   const splittedPath = removeTrailingSlash(path).split("/");
-  //   var baseName;
-  //   if(splittedPath[splittedPath.length-1] == "{id}"){
-  //     baseName = splittedPath[splittedPath.length - 2]
-  //   } else {
-  //     baseName = splittedPath[splittedPath.length - 1];
-  //   }
-  //   console.log("working on: ", baseName);
-
-  //   if (!baseName) {
-  //     throw new Error("Invalid path: " + path);
-  //   }
-
-  //   const name = pluralize(baseName);
-  //   const url = `${removeTrailingSlash(serverUrl)}/${name}`;
-
-  //   const title = classify(baseName);
-
-  //   //logic to find the corresponding definition
-  //   //for  every path iterate through methods (get/post etc)
-  //   //find schema reference in method
-  //   //set definition
-  //   //
-
-
-  //   //TODO: create logic for having multiple operation per resource
-  //   //TODO: create final resource with multiple operations
-
-  //   const pathItem = response.paths["/" +baseName];
-  //   if (!pathItem) {
-  //     throw new Error("incorrect path item");
-  //   }
-  //   const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
-
-  //   for (const method of HTTP_METHODS) {
-  //     const operation = (pathItem as any)[method];
-  //     console.log(method);
-  //     console.log(operation);
-  //     if (!operation) {
-  //       continue;
-  //     } 
-  //     operation.properties.schema;
-  //   }
-    
-  //   const {
-  //     get: showOperation,
-  //     put: putOperation,
-  //     patch: patchOperation,
-  //     delete: deleteOperation,
-  //   } = pathItem;
-  //   showOperation;
-  //   putOperation;
-  //   patchOperation;
-  //   deleteOperation;
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  //   if (!response.definitions) {
-  //     throw new Error("no definitions found"); // @TODO
-  //   }
-
-  //   const definition = response.definitions[title] ?? undefined;
-
-  //   if (!definition) {
-  //     throw new Error("path not in definitions"); // @TODO
-  //   } 
-
-  //   const { description = "", properties } = definition;
-
-  //   if (!properties) {
-  //     throw new Error("properties empty"); // @TODO
-  //   }
-
-  //   const requiredFields = response.definitions?.[title]?.required ?? [];
-
-  //   const fields = Object.entries(properties).map(
-      
-  //     ([fieldName, property]) =>
-  //       new Field(fieldName, {
-  //         id: null,
-  //         range: null,
-  //         type: getType(
-  //           typeof property?.type === "string" ? property.type : "",
-  //           property?.["format"] ?? "",
-  //         ),
-  //         enum: buildEnumObject(property.enum),
-  //         reference: null,
-  //         embedded: null,
-  //         required: requiredFields.some((value) => value === fieldName),
-  //         description: property.description || "",
-  //       }),
-  //   );
-  //   const newResource = new Resource(name, url, {
-  //     id: null,
-  //     title,
-  //     description,
-  //     fields,
-  //     readableFields: fields,
-  //     writableFields: fields,
-  //   });
-
-  //   if(newResource.title == "/token"){
-  //     console.dir(newResource, { depth: null, colors: true })
-  //   }
-
-  //   return newResource
-  // });
-// }
